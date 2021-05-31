@@ -8,11 +8,10 @@ import Profile from './components/Profile.js';
 import MyFavoriteBooks from './myFavoriteBooks'
 import Login from './Login'
 
-
 ReactDOM.render(
   <Auth0Provider
-    domain="dev-47nw90cg.eu.auth0.com"
-    clientId="RpDiZCts2YIaOZjHx87lB8WKz4e1tyUM"
+    domain={process.env.REACT_APP_DOMAIN}
+    clientId={process.env.REACT_APP_CLIENT_ID}
     redirectUri={window.location.origin}
   >
     <App />
