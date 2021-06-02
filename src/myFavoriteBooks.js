@@ -8,10 +8,13 @@ import Card from 'react-bootstrap/Card'
 import Button from 'react-bootstrap/Button'
 import myFavoriteBooks from './myFavoriteBooks.css'
 import BookFormModal from './components/BookFormModal.js'
+import UpdateBookForm from './components/UpdateBookForm.js'
+
 
 class MyFavoriteBooks extends React.Component {
   constructor(props){
     super(props)
+
     this.state={
       bookData:[],
       show:false,
@@ -19,6 +22,9 @@ class MyFavoriteBooks extends React.Component {
       imageURL:'',
       bookName:'',
       description:'',
+      updateFormShow:false,
+      index:0,
+      valuesBeforeUpdateArray:[],
 
     }
 
@@ -30,7 +36,7 @@ class MyFavoriteBooks extends React.Component {
       let email=this.props.auth0.user.email
       let PORT=process.env.REACT_APP_PORT
       let locally='http://localhost:3020'
-      let URL=`${locally}/books?email=${email}`
+      let URL=`${PORT}/books?email=${email}`
       let data= await axios.get(URL);
       if (data.data.length>0){
         this.setState({
@@ -61,7 +67,7 @@ class MyFavoriteBooks extends React.Component {
     let email=this.props.auth0.user.email
     let PORT=process.env.REACT_APP_PORT
     let locally='http://localhost:3020'
-    let URL=`${locally}/addBook`
+    let URL=`${PORT}/addBook`
 
     const formData={
       email:this.props.auth0.user.email,
@@ -115,21 +121,59 @@ class MyFavoriteBooks extends React.Component {
     let email=this.props.auth0.user.email
     let PORT=process.env.REACT_APP_PORT
     let locally='http://localhost:3020'
-    let URL=`${locally}/deleteBook`
+    let URL=`${PORT}/deleteBook`
     const details = {
       email:this.props.auth0.user.email,
       index:index
     }
 
-    console.log(index)
     
     let x= await axios.delete(URL,{params:details})
-    console.log('delete',x.data)
     this.setState({
       bookData:x.data
     })
       
   }
+  // lab 14 create the update button 
+  update=(idx)=>{
+    const valuesBeforeUpdate= this.state.bookData.filter((i,index)=> idx==index);
+    this.setState({
+      updateFormShow:true,
+      valuesBeforeUpdateArray:valuesBeforeUpdate,
+      index:idx
+    })
+       
+
+  }
+
+  updateOnDataBase=async e=>{
+    e.preventDefault();
+
+    let PORT=process.env.REACT_APP_PORT;
+    let locally='http://localhost:3020';
+    let index=this.state.index;
+    let URL=`${PORT}/updateBook/${index}`;
+    const details = {
+      email:this.props.auth0.user.email,
+      imageURL:this.state.imageURL,
+      bookName:this.state.bookName,
+      description:this.state.description,
+
+    }
+    console.log(index);
+    console.log(details)
+    
+    let mongoData= await axios.put(URL,details);
+    // const bookDataAfterUpdate=this.state.bookData.splice(this.state.index,1,mongoData.data)
+    this.setState({
+      bookData:mongoData.data,
+      updateFormShow:false,
+
+
+    })
+
+  }
+
   
   render() {
     const { user, isAuthenticated } = this.props.auth0;    
@@ -145,6 +189,8 @@ class MyFavoriteBooks extends React.Component {
 
             <Button onClick={this.addform}> ADD BOOK </Button>
             <BookFormModal showAddModel={this.state.showAddModel} bookName={this.BookName} Description={this.Description} ImageURL={this.ImageURL} addToDataBase={this.addToDataBase}/>
+            
+            <UpdateBookForm updateFormShow={this.state.updateFormShow} bookName={this.BookName} Description={this.Description} ImageURL={this.ImageURL} updateOnDataBase={this.updateOnDataBase} valueDatas={this.state.valuesBeforeUpdateArray}/>
 
             <div class='books'>
 
@@ -162,6 +208,7 @@ class MyFavoriteBooks extends React.Component {
                               {item.description}
                             </Card.Text>
                             <Button variant="primary" onClick={()=> this.remove(idx)}>DELETE</Button>
+                            <Button variant="primary" onClick={()=> this.update(idx)}>UPDATE</Button>
                           </Card.Body>
                         </Card>          
 
